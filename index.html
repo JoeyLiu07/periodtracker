@@ -13,7 +13,12 @@
       --text-muted: #A36B7B;
       --primary: #E11D48;
       --primary-light: #FFE4E6;
-      --pink-circle: #FB7185;
+      
+      /* Flow Intensity Colors */
+      --flow-light: #FFB3C1;
+      --flow-medium: #E63946;
+      --flow-heavy: #9B001C;
+
       --border: #FCE7F3;
       --radius: 18px;
     }
@@ -114,68 +119,62 @@
       font-size: 0.7rem;
       font-weight: 800;
       color: var(--text-muted);
-      margin-bottom: 6px;
-      gap: 4px;
+      margin-bottom: 10px;
     }
 
+    /* Gridless Calendar Layout */
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
+      row-gap: 12px;
+      column-gap: 4px;
+      justify-items: center;
     }
 
-    .day-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 4px;
+    .day-item {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      font-size: 0.9rem;
+      font-weight: 800;
+      color: var(--text);
       cursor: pointer;
       position: relative;
-      aspect-ratio: 1 / 1.25;
-      overflow: hidden;
-    }
-
-    .day-card.empty { background: transparent; border: none; cursor: default; }
-    
-    .day-card.today { 
-      border: 2px solid var(--primary); 
-      background: #FFF0F3;
-    }
-    
-    .day-card.selected {
-      border: 2px solid var(--primary);
-      background: var(--primary-light);
-    }
-
-    .day-num { 
-      font-size: 0.75rem; 
-      font-weight: 800; 
-      color: var(--text-muted); 
-      line-height: 1; 
-      margin-top: 2px;
-      margin-left: 2px;
-    }
-
-    .day-content {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 100%;
-    }
-
-    .pink-circle {
-      width: 22px;
-      height: 22px;
       border-radius: 50%;
-      background-color: var(--pink-circle);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .day-item.empty { cursor: default; }
+
+    /* Circle styled dates */
+    .day-item.flow-1 {
+      background-color: var(--flow-light);
+      color: #701A2A;
+      box-shadow: 0 2px 6px rgba(255, 179, 193, 0.5);
+    }
+
+    .day-item.flow-2 {
+      background-color: var(--flow-medium);
       color: white;
-      box-shadow: 0 2px 5px rgba(225, 29, 72, 0.25);
+      box-shadow: 0 2px 6px rgba(230, 57, 70, 0.4);
+    }
+
+    .day-item.flow-3 {
+      background-color: var(--flow-heavy);
+      color: white;
+      box-shadow: 0 2px 6px rgba(155, 0, 28, 0.5);
+    }
+
+    .day-item.today:not(.flow-1):not(.flow-2):not(.flow-3) {
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+
+    .day-item.selected {
+      outline: 3px solid var(--primary);
+      outline-offset: 2px;
     }
 
     .action-bar {
@@ -378,13 +377,13 @@
       <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-top: 14px;">FLOW INTENSITY:</div>
       <div class="flow-picker">
         <button class="flow-option" id="flow1" onclick="selectFlow(1)">
-          <span>💧</span> Light
+          <span>🩸</span> Light
         </button>
         <button class="flow-option" id="flow2" onclick="selectFlow(2)">
-          <span>💧💧</span> Medium
+          <span>🩸🩸</span> Medium
         </button>
         <button class="flow-option" id="flow3" onclick="selectFlow(3)">
-          <span>💧💧💧</span> Heavy
+          <span>🩸🩸🩸</span> Heavy
         </button>
       </div>
 
@@ -467,9 +466,9 @@
       const flow = dayData.flow;
 
       let flowText = "No Period Recorded";
-      if (flow == 1) flowText = "💧 Light Flow (Level 1)";
-      else if (flow == 2) flowText = "💧💧 Medium Flow (Level 2)";
-      else if (flow == 3) flowText = "💧💧💧 Heavy Flow (Level 3)";
+      if (flow == 1) flowText = "🩸 Light Flow";
+      else if (flow == 2) flowText = "🩸🩸 Medium Flow";
+      else if (flow == 3) flowText = "🩸🩸🩸 Heavy Flow";
 
       document.getElementById('detailTitle').innerText = dateStr;
       document.getElementById('detailFlowVal').innerText = flowText;
@@ -629,7 +628,7 @@
       grid.innerHTML = '';
 
       for (let i = 0; i < firstDayIndex; i++) {
-        grid.innerHTML += `<div class="day-card empty"></div>`;
+        grid.innerHTML += `<div class="day-item empty"></div>`;
       }
 
       const todayStr = new Date().toISOString().split('T')[0];
@@ -641,17 +640,14 @@
         const isToday = dateStr === todayStr;
         const isSelected = selectedDates.has(dateStr);
 
-        let circleHtml = '';
-        if (flow !== "" && flow !== undefined && flow !== null) {
-          circleHtml = `<div class="pink-circle"></div>`;
-        }
+        let flowClass = '';
+        if (flow == 1) flowClass = 'flow-1';
+        else if (flow == 2) flowClass = 'flow-2';
+        else if (flow == 3) flowClass = 'flow-3';
 
         grid.innerHTML += `
-          <div class="day-card ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="handleDateClick('${dateStr}')">
-            <div class="day-num">${day}</div>
-            <div class="day-content">
-              ${circleHtml}
-            </div>
+          <div class="day-item ${flowClass} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="handleDateClick('${dateStr}')">
+            ${day}
           </div>
         `;
       }
